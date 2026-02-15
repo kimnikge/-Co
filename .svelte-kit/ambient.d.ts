@@ -26,6 +26,9 @@
  * ```
  */
 declare module '$env/static/private' {
+	export const ADMIN_LOGIN: string;
+	export const ADMIN_PASSWORD: string;
+	export const SESSION_SECRET: string;
 	export const NVM_RC_VERSION: string;
 	export const TERM_PROGRAM: string;
 	export const NODE: string;
@@ -88,6 +91,7 @@ declare module '$env/static/private' {
 	export const GIT_ASKPASS: string;
 	export const INFOPATH: string;
 	export const HOMEBREW_CELLAR: string;
+	export const GIT_PAGER: string;
 	export const DATABASE_URL: string;
 	export const npm_node_execpath: string;
 	export const npm_config_prefix: string;
@@ -122,6 +126,9 @@ declare module '$env/static/public' {
  */
 declare module '$env/dynamic/private' {
 	export const env: {
+		ADMIN_LOGIN: string;
+		ADMIN_PASSWORD: string;
+		SESSION_SECRET: string;
 		NVM_RC_VERSION: string;
 		TERM_PROGRAM: string;
 		NODE: string;
@@ -184,6 +191,7 @@ declare module '$env/dynamic/private' {
 		GIT_ASKPASS: string;
 		INFOPATH: string;
 		HOMEBREW_CELLAR: string;
+		GIT_PAGER: string;
 		DATABASE_URL: string;
 		npm_node_execpath: string;
 		npm_config_prefix: string;

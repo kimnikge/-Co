@@ -1,34 +1,106 @@
-import { Pool } from 'pg';
+import fs from 'fs';
+import path from 'path';
+import crypto from 'crypto';
 import type { RequestHandler } from './$types';
 
-const pool = new Pool({
-	connectionString: process.env.DATABASE_URL
-});
+const DATA_FILE = path.resolve('data/requests.json');
 
-export const GET: RequestHandler = async () => {
-	const client = await pool.connect();
+function readRequests(): any[] {
 	try {
-		const result = await client.query('SELECT * FROM requests');
-		return new Response(JSON.stringify(result.rows), {
+		const raw = fs.readFileSync(DATA_FILE, 'utf-8');
+		return JSON.parse(raw);
+	} catch {
+		return [];
+	}
+}
+
+function writeRequests(data: any[]) {
+	fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+}
+
+function isAuthorized(cookies: any): boolean {
+	const session = cookies.get('admin_session');
+	const secret = process.env.SESSION_SECRET || 'default-secret';
+	return session === secret;
+}
+
+// GET — список заявок (только авторизованным)
+export const GET: RequestHandler = async ({ cookies }) => {
+	if (!isAuthorized(cookies)) {
+		return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+			status: 401,
 			headers: { 'Content-Type': 'application/json' }
 		});
-	} finally {
-		client.release();
 	}
+
+	const requests = readRequests();
+	return new Response(JSON.stringify(requests), {
+		headers: { 'Content-Type': 'application/json' }
+	});
 };
 
+// POST — создание заявки (из контактной формы)
 export const POST: RequestHandler = async ({ request }) => {
-	const client = await pool.connect();
 	const data = await request.json();
-	try {
-		await client.query(
-			'INSERT INTO requests (id, date, name, phone, businessType, regime, status) VALUES ($1, $2, $3, $4, $5, $6, $7)',
-			[data.id, data.date, data.name, data.phone, data.businessType, data.regime, data.status]
-		);
-		return new Response(JSON.stringify({ success: true }), {
+
+	if (!data.name || !data.phone || !data.regime) {
+		return new Response(JSON.stringify({ success: false, message: 'validation_error' }), {
+			status: 400,
 			headers: { 'Content-Type': 'application/json' }
 		});
-	} finally {
-		client.release();
 	}
+
+	const entry = {
+		id: crypto.randomUUID(),
+		date: new Date().toISOString(),
+		name: data.name,
+		phone: data.phone,
+		businessType: data.businessType || '',
+		regime: data.regime,
+		status: 'new'
+	};
+
+	const requests = readRequests();
+	requests.push(entry);
+	writeRequests(requests);
+
+	return new Response(JSON.stringify({ success: true }), {
+		headers: { 'Content-Type': 'application/json' }
+	});
+};
+
+// PATCH — изменение статуса заявки
+export const PATCH: RequestHandler = async ({ request, cookies }) => {
+	if (!isAuthorized(cookies)) {
+		return new Response(JSON.stringify({ error: 'Unauthorized' }), {
+			status: 401,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
+	const { id, status } = await request.json();
+
+	if (!id || !['new', 'in_progress', 'closed'].includes(status)) {
+		return new Response(JSON.stringify({ success: false, message: 'invalid_data' }), {
+			status: 400,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
+	const requests = readRequests();
+	const idx = requests.findIndex((r: any) => r.id === id);
+
+	if (idx === -1) {
+		return new Response(JSON.stringify({ success: false, message: 'not_found' }), {
+			status: 404,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
+	requests[idx].status = status;
+	writeRequests(requests);
+
+	return new Response(JSON.stringify({ success: true }), {
+		headers: { 'Content-Type': 'application/json' }
+	});
 };

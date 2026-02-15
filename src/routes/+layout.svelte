@@ -233,7 +233,6 @@
 				<a href="/calculator" on:click={closeMenu}>Калькулятор</a>
 				<a href="/cases" on:click={closeMenu}>Кейсы</a>
 				<a href="/contact" on:click={closeMenu}>Контакты</a>
-				<a href="/admin" on:click={closeMenu}>Админ</a>
 			</nav>
 		</div>
 	</header>

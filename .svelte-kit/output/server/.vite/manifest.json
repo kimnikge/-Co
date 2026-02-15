@@ -77,7 +77,7 @@
     "src": "src/routes/+page.svelte"
   },
   "src/routes/admin/+page.css": {
-    "file": "_app/immutable/assets/_page.fcfd8be9.css",
+    "file": "_app/immutable/assets/_page.51adf067.css",
     "src": "src/routes/admin/+page.css"
   },
   "src/routes/admin/+page.server.ts": {
@@ -87,7 +87,7 @@
   },
   "src/routes/admin/+page.svelte": {
     "css": [
-      "_app/immutable/assets/_page.fcfd8be9.css"
+      "_app/immutable/assets/_page.51adf067.css"
     ],
     "file": "entries/pages/admin/_page.svelte.js",
     "imports": [
@@ -95,6 +95,11 @@
     ],
     "isEntry": true,
     "src": "src/routes/admin/+page.svelte"
+  },
+  "src/routes/admin/+server.ts": {
+    "file": "entries/endpoints/admin/_server.ts.js",
+    "isEntry": true,
+    "src": "src/routes/admin/+server.ts"
   },
   "src/routes/agreement/+page.svelte": {
     "file": "entries/pages/agreement/_page.svelte.js",

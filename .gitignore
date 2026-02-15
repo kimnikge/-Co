@@ -1,0 +1,15 @@
+node_modules
+.svelte-kit
+build
+logs
+
+# Local Netlify folder
+.netlify
+
+# IDE / OS
+.vscode
+.DS_Store
+
+# Environment
+.env
+.env.*

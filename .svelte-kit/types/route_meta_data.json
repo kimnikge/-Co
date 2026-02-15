@@ -5,7 +5,8 @@
 	],
 	"/admin": [
 		"src/routes/admin/+page.server.ts",
-		"src/routes/+layout.server.ts"
+		"src/routes/+layout.server.ts",
+		"src/routes/admin/+server.ts"
 	],
 	"/agreement": [
 		"src/routes/+layout.server.ts"
