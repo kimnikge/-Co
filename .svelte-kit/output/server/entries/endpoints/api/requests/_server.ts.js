@@ -1,17 +1,17 @@
-import fs from "fs";
-import path from "path";
+import { getStore } from "@netlify/blobs";
 import crypto from "crypto";
-const DATA_FILE = path.resolve("data/requests.json");
-function readRequests() {
+async function readRequests() {
   try {
-    const raw = fs.readFileSync(DATA_FILE, "utf-8");
-    return JSON.parse(raw);
+    const store = getStore({ name: "requests", consistency: "strong" });
+    const data = await store.get("requests", { type: "json" });
+    return data || [];
   } catch {
     return [];
   }
 }
-function writeRequests(data) {
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), "utf-8");
+async function writeRequests(data) {
+  const store = getStore({ name: "requests", consistency: "strong" });
+  await store.setJSON("requests", data);
 }
 function isAuthorized(cookies) {
   const session = cookies.get("admin_session");
@@ -25,13 +25,21 @@ const GET = async ({ cookies }) => {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const requests = readRequests();
+  const requests = await readRequests();
   return new Response(JSON.stringify(requests), {
     headers: { "Content-Type": "application/json" }
   });
 };
 const POST = async ({ request }) => {
-  const data = await request.json();
+  let data;
+  try {
+    data = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ success: false, message: "Invalid JSON" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
   if (!data.name || !data.phone || !data.regime) {
     return new Response(JSON.stringify({ success: false, message: "validation_error" }), {
       status: 400,
@@ -47,9 +55,9 @@ const POST = async ({ request }) => {
     regime: data.regime,
     status: "new"
   };
-  const requests = readRequests();
+  const requests = await readRequests();
   requests.push(entry);
-  writeRequests(requests);
+  await writeRequests(requests);
   return new Response(JSON.stringify({ success: true }), {
     headers: { "Content-Type": "application/json" }
   });
@@ -61,14 +69,23 @@ const PATCH = async ({ request, cookies }) => {
       headers: { "Content-Type": "application/json" }
     });
   }
-  const { id, status } = await request.json();
+  let body;
+  try {
+    body = await request.json();
+  } catch {
+    return new Response(JSON.stringify({ success: false, message: "Invalid JSON" }), {
+      status: 400,
+      headers: { "Content-Type": "application/json" }
+    });
+  }
+  const { id, status } = body;
   if (!id || !["new", "in_progress", "closed"].includes(status)) {
     return new Response(JSON.stringify({ success: false, message: "invalid_data" }), {
       status: 400,
       headers: { "Content-Type": "application/json" }
     });
   }
-  const requests = readRequests();
+  const requests = await readRequests();
   const idx = requests.findIndex((r) => r.id === id);
   if (idx === -1) {
     return new Response(JSON.stringify({ success: false, message: "not_found" }), {
@@ -77,7 +94,7 @@ const PATCH = async ({ request, cookies }) => {
     });
   }
   requests[idx].status = status;
-  writeRequests(requests);
+  await writeRequests(requests);
   return new Response(JSON.stringify({ success: true }), {
     headers: { "Content-Type": "application/json" }
   });

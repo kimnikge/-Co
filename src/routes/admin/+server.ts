@@ -1,14 +1,4 @@
 import type { RequestHandler } from './$types';
-import fs from 'fs';
-import path from 'path';
-
-const LOG_FILE = path.resolve('logs/app.log');
-
-function logEvent(event: string) {
-	const timestamp = new Date().toISOString();
-	const line = `[${timestamp}] ${event}\n`;
-	try { fs.appendFileSync(LOG_FILE, line); } catch { /* ignore */ }
-}
 
 const loginAttempts = new Map<string, number[]>();
 const MAX_ATTEMPTS = 5;
@@ -31,12 +21,21 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	const forwarded = request.headers.get('x-forwarded-for');
 	const ip = forwarded?.split(',')[0].trim() || getClientAddress();
 
-	const { action } = await request.json().catch(() => ({ action: '' }));
+	let body: any;
+	try {
+		body = await request.json();
+	} catch {
+		return new Response(JSON.stringify({ error: 'Invalid JSON' }), {
+			status: 400,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
+	const { action, login, password } = body;
 
 	// Логаут
 	if (action === 'logout') {
 		cookies.delete('admin_session', { path: '/' });
-		logEvent(`ADMIN LOGOUT from ${ip}`);
 		return new Response(JSON.stringify({ success: true }), {
 			headers: { 'Content-Type': 'application/json' }
 		});
@@ -45,15 +44,11 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 	// Логин
 	if (action === 'login') {
 		if (isLoginRateLimited(ip)) {
-			logEvent(`ADMIN LOGIN RATE LIMITED: ${ip}`);
 			return new Response(JSON.stringify({ success: false, message: 'Слишком много попыток. Попробуйте позже.' }), {
 				status: 429,
 				headers: { 'Content-Type': 'application/json' }
 			});
 		}
-
-		const body = await request.clone().json();
-		const { login, password } = body;
 
 		const adminLogin = process.env.ADMIN_LOGIN || 'admin';
 		const adminPassword = process.env.ADMIN_PASSWORD || 'admin';
@@ -69,13 +64,11 @@ export const POST: RequestHandler = async ({ request, cookies, getClientAddress 
 				sameSite: 'strict',
 				maxAge: 60 * 60 * 8 // 8 часов
 			});
-			logEvent(`ADMIN LOGIN SUCCESS from ${ip}`);
 			return new Response(JSON.stringify({ success: true }), {
 				headers: { 'Content-Type': 'application/json' }
 			});
 		}
 
-		logEvent(`ADMIN LOGIN FAILED from ${ip} (login: ${login})`);
 		return new Response(JSON.stringify({ success: false, message: 'Неверный логин или пароль' }), {
 			status: 401,
 			headers: { 'Content-Type': 'application/json' }

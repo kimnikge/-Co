@@ -10,7 +10,7 @@ return {
 	assets: new Set(["apple-touch-icon.png","favicon.ico","icons/icon-192.png","icons/icon-512.png","manifest.webmanifest","sw.js"]),
 	mimeTypes: {".png":"image/png",".webmanifest":"application/manifest+json",".js":"application/javascript"},
 	_: {
-		client: {"start":"_app/immutable/entry/start.cad955b8.js","app":"_app/immutable/entry/app.c1db873a.js","imports":["_app/immutable/entry/start.cad955b8.js","_app/immutable/chunks/scheduler.457aa660.js","_app/immutable/chunks/singletons.caebda63.js","_app/immutable/entry/app.c1db873a.js","_app/immutable/chunks/scheduler.457aa660.js","_app/immutable/chunks/index.4656ad90.js"],"stylesheets":[],"fonts":[]},
+		client: {"start":"_app/immutable/entry/start.49f82460.js","app":"_app/immutable/entry/app.68e54770.js","imports":["_app/immutable/entry/start.49f82460.js","_app/immutable/chunks/scheduler.457aa660.js","_app/immutable/chunks/singletons.7f57201b.js","_app/immutable/entry/app.68e54770.js","_app/immutable/chunks/scheduler.457aa660.js","_app/immutable/chunks/index.4656ad90.js"],"stylesheets":[],"fonts":[]},
 		nodes: [
 			__memo(() => import('./nodes/0.js')),
 			__memo(() => import('./nodes/1.js')),

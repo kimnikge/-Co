@@ -75,3 +75,6 @@
 [2026-02-13T15:15:45.425Z] Request: /calculator - 200
 [2026-02-13T15:34:20.603Z] Request: / - 200
 [2026-02-13T15:40:21.978Z] Request: / - 200
+[2026-02-15T08:28:55.582Z] Request: / - 200
+[2026-02-15T08:28:55.764Z] Request: /apple-touch-icon-precomposed.png - 404
+[2026-02-15T08:28:56.604Z] Request: /service-worker.js - 404

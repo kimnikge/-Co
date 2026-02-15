@@ -1,6 +1,5 @@
 import { json2csv } from 'json-2-csv';
-import fs from 'fs';
-import path from 'path';
+import { getStore } from '@netlify/blobs';
 import type { RequestHandler } from './$types';
 
 function isAuthorized(cookies: any): boolean {
@@ -14,10 +13,11 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		return new Response('Unauthorized', { status: 401 });
 	}
 
-	const filePath = path.resolve('data/requests.json');
 	let data: any[] = [];
 	try {
-		data = JSON.parse(fs.readFileSync(filePath, 'utf-8'));
+		const store = getStore({ name: 'requests', consistency: 'strong' });
+		const result = await store.get('requests', { type: 'json' });
+		data = (result as any[]) || [];
 	} catch { /* empty */ }
 
 	if (data.length === 0) {

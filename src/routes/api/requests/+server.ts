@@ -1,21 +1,20 @@
-import fs from 'fs';
-import path from 'path';
+import { getStore } from '@netlify/blobs';
 import crypto from 'crypto';
 import type { RequestHandler } from './$types';
 
-const DATA_FILE = path.resolve('data/requests.json');
-
-function readRequests(): any[] {
+async function readRequests(): Promise<any[]> {
 	try {
-		const raw = fs.readFileSync(DATA_FILE, 'utf-8');
-		return JSON.parse(raw);
+		const store = getStore({ name: 'requests', consistency: 'strong' });
+		const data = await store.get('requests', { type: 'json' });
+		return (data as any[]) || [];
 	} catch {
 		return [];
 	}
 }
 
-function writeRequests(data: any[]) {
-	fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf-8');
+async function writeRequests(data: any[]) {
+	const store = getStore({ name: 'requests', consistency: 'strong' });
+	await store.setJSON('requests', data);
 }
 
 function isAuthorized(cookies: any): boolean {
@@ -33,7 +32,7 @@ export const GET: RequestHandler = async ({ cookies }) => {
 		});
 	}
 
-	const requests = readRequests();
+	const requests = await readRequests();
 	return new Response(JSON.stringify(requests), {
 		headers: { 'Content-Type': 'application/json' }
 	});
@@ -41,7 +40,15 @@ export const GET: RequestHandler = async ({ cookies }) => {
 
 // POST — создание заявки (из контактной формы)
 export const POST: RequestHandler = async ({ request }) => {
-	const data = await request.json();
+	let data: any;
+	try {
+		data = await request.json();
+	} catch {
+		return new Response(JSON.stringify({ success: false, message: 'Invalid JSON' }), {
+			status: 400,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
 
 	if (!data.name || !data.phone || !data.regime) {
 		return new Response(JSON.stringify({ success: false, message: 'validation_error' }), {
@@ -60,9 +67,9 @@ export const POST: RequestHandler = async ({ request }) => {
 		status: 'new'
 	};
 
-	const requests = readRequests();
+	const requests = await readRequests();
 	requests.push(entry);
-	writeRequests(requests);
+	await writeRequests(requests);
 
 	return new Response(JSON.stringify({ success: true }), {
 		headers: { 'Content-Type': 'application/json' }
@@ -78,7 +85,17 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 		});
 	}
 
-	const { id, status } = await request.json();
+	let body: any;
+	try {
+		body = await request.json();
+	} catch {
+		return new Response(JSON.stringify({ success: false, message: 'Invalid JSON' }), {
+			status: 400,
+			headers: { 'Content-Type': 'application/json' }
+		});
+	}
+
+	const { id, status } = body;
 
 	if (!id || !['new', 'in_progress', 'closed'].includes(status)) {
 		return new Response(JSON.stringify({ success: false, message: 'invalid_data' }), {
@@ -87,7 +104,7 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 		});
 	}
 
-	const requests = readRequests();
+	const requests = await readRequests();
 	const idx = requests.findIndex((r: any) => r.id === id);
 
 	if (idx === -1) {
@@ -98,7 +115,7 @@ export const PATCH: RequestHandler = async ({ request, cookies }) => {
 	}
 
 	requests[idx].status = status;
-	writeRequests(requests);
+	await writeRequests(requests);
 
 	return new Response(JSON.stringify({ success: true }), {
 		headers: { 'Content-Type': 'application/json' }
