@@ -1,0 +1,309 @@
+/* ===== Reset ===== */
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+/* ===== Base ===== */
+:root {
+  --color-bg:           #f0f2f5;
+  --color-surface:      #ffffff;
+  --color-border:       #e0e0e0;
+  --color-text:         #1a1a1a;
+  --color-text-muted:   #666666;
+  --color-accent:       #2563eb;
+
+  --color-plan-bg:      #f8f9ff;
+  --color-fact-bg:      #f9fff8;
+  --color-diff-bg:      #fafafa;
+
+  --color-positive:     #16a34a;
+  --color-positive-bg:  #f0fdf4;
+  --color-negative:     #dc2626;
+  --color-negative-bg:  #fff5f5;
+  --color-neutral:      #6b7280;
+
+  --col-label-w:        140px;
+  --col-month-w:        112px;
+  --col-total-w:        130px;
+
+  --radius:             8px;
+  --shadow:             0 1px 4px rgba(0,0,0,0.08);
+}
+
+body {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 14px;
+  line-height: 1.5;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+
+/* ===== Header ===== */
+.page-header {
+  background: var(--color-surface);
+  border-bottom: 1px solid var(--color-border);
+  padding: 16px 24px;
+}
+
+.page-header h1 {
+  font-size: 18px;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+/* ===== Main ===== */
+.page-main {
+  max-width: 1400px;
+  margin: 28px auto;
+  padding: 0 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* ===== Block ===== */
+.block {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+
+.block__title {
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  color: var(--color-text-muted);
+  padding: 11px 20px;
+  border-bottom: 1px solid var(--color-border);
+  background: #f7f8fa;
+}
+
+.block__body {
+  padding: 20px;
+}
+
+.block__body--overflow {
+  padding: 0;
+}
+
+/* ===== Table Wrap ===== */
+.table-wrap {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ===== Budget Table ===== */
+.budget-table {
+  border-collapse: collapse;
+  min-width: 100%;
+  table-layout: fixed;
+}
+
+/* --- Column widths --- */
+.budget-table .col-label {
+  width: var(--col-label-w);
+  min-width: var(--col-label-w);
+}
+
+.budget-table thead th:not(.col-label):not(.col-total),
+.budget-table tbody td:not(.col-label):not(.col-total) {
+  width: var(--col-month-w);
+  min-width: var(--col-month-w);
+}
+
+.budget-table .col-total {
+  width: var(--col-total-w);
+  min-width: var(--col-total-w);
+}
+
+/* --- Sticky label column --- */
+.budget-table .col-label {
+  position: sticky;
+  left: 0;
+  z-index: 2;
+  background: inherit;
+}
+
+.budget-table thead .col-label {
+  background: #f0f2f7;
+  z-index: 3;
+}
+
+/* --- Base cell --- */
+.budget-table th,
+.budget-table td {
+  padding: 0;
+  border: 1px solid var(--color-border);
+  text-align: center;
+  vertical-align: middle;
+  white-space: nowrap;
+}
+
+/* --- Header row --- */
+.budget-table thead tr {
+  background: #f0f2f7;
+}
+
+.budget-table thead th {
+  padding: 10px 8px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.budget-table thead th.col-label {
+  text-align: left;
+  padding-left: 16px;
+  color: var(--color-text);
+}
+
+/* --- Label cells in tbody --- */
+.budget-table tbody td.col-label {
+  padding: 0 16px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: left;
+  height: 52px;
+}
+
+/* --- Row backgrounds --- */
+.row-plan {
+  background: var(--color-plan-bg);
+}
+
+.row-fact {
+  background: var(--color-fact-bg);
+}
+
+.row-diff {
+  background: var(--color-diff-bg);
+}
+
+/* --- Input cells --- */
+.budget-table tbody td:not(.col-label):not(.col-total) {
+  padding: 6px 8px;
+}
+
+.cell-input {
+  display: block;
+  width: 100%;
+  height: 38px;
+  padding: 0 8px;
+  border: 1px solid transparent;
+  border-radius: 4px;
+  background: transparent;
+  font-size: 13px;
+  font-family: inherit;
+  text-align: right;
+  color: var(--color-text);
+  transition: border-color 0.15s, background 0.15s;
+  -moz-appearance: textfield;
+}
+
+.cell-input::-webkit-outer-spin-button,
+.cell-input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+}
+
+.cell-input:hover {
+  border-color: #c0c8d8;
+  background: rgba(255,255,255,0.8);
+}
+
+.cell-input:focus {
+  outline: none;
+  border-color: var(--color-accent);
+  background: #ffffff;
+  box-shadow: 0 0 0 2px rgba(37,99,235,0.12);
+}
+
+.cell-input::placeholder {
+  color: #c0c4cc;
+}
+
+/* --- Total column --- */
+.budget-table .col-total {
+  background: #f0f2f7 !important;
+  border-left: 2px solid #c8cdd8;
+}
+
+.total-val {
+  display: block;
+  padding: 0 12px;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: right;
+  color: var(--color-text);
+}
+
+/* --- Diff row cells --- */
+.budget-table .row-diff td:not(.col-label) {
+  padding: 6px 8px;
+  height: 44px;
+}
+
+.diff-val {
+  display: inline-block;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 3px 7px;
+  border-radius: 4px;
+  background: transparent;
+  color: var(--color-neutral);
+}
+
+.diff-val.positive {
+  color: var(--color-positive);
+  background: var(--color-positive-bg);
+}
+
+.diff-val.negative {
+  color: var(--color-negative);
+  background: var(--color-negative-bg);
+}
+
+/* ===== Mobile ===== */
+@media (max-width: 768px) {
+  :root {
+    --col-label-w:   120px;
+    --col-month-w:   96px;
+    --col-total-w:   110px;
+  }
+
+  .page-main {
+    margin: 16px auto;
+    padding: 0 12px;
+  }
+
+  .budget-table thead th {
+    font-size: 11px;
+    padding: 8px 4px;
+  }
+
+  .budget-table tbody td.col-label {
+    font-size: 12px;
+    padding: 0 10px;
+  }
+
+  .cell-input {
+    font-size: 12px;
+    height: 34px;
+  }
+
+  .diff-val {
+    font-size: 11px;
+    padding: 2px 5px;
+  }
+
+  .total-val {
+    font-size: 12px;
+  }
+}
