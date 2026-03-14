@@ -45,12 +45,55 @@ body {
   background: var(--color-surface);
   border-bottom: 1px solid var(--color-border);
   padding: 16px 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
 }
 
 .page-header h1 {
   font-size: 18px;
   font-weight: 600;
   letter-spacing: -0.01em;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+}
+
+.save-status {
+  font-size: 12px;
+  color: var(--color-positive);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.save-status.visible {
+  opacity: 1;
+}
+
+.btn-save {
+  padding: 7px 18px;
+  background: var(--color-accent);
+  color: #fff;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s, opacity 0.15s;
+}
+
+.btn-save:hover {
+  background: #1d4ed8;
+}
+
+.btn-save:active {
+  opacity: 0.85;
 }
 
 /* ===== Main ===== */

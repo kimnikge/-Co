@@ -2,15 +2,13 @@
   'use strict';
 
   const MONTHS = 12;
+  const STORAGE_KEY = 'partners-budget';
 
-  // Parse input value; comma or dot as decimal separator
   function parseVal(input) {
     if (!input || input.value.trim() === '') return null;
     return parseFloat(input.value.replace(',', '.')) || 0;
   }
 
-  // Format number: 30500000 → "30,5 млн", 1500000 → "1,5 млн"
-  // Values are entered directly in millions, so 30.5 → "30,5 млн"
   function fmt(val) {
     if (val === null) return '—';
     const abs = Math.abs(val);
@@ -22,7 +20,6 @@
     return sign + str + '\u202fмлн';
   }
 
-  // Same but no sign prefix (for plan/fact totals)
   function fmtTotal(val) {
     if (val === null || val === 0) return '—';
     return val.toLocaleString('ru-RU', {
@@ -48,7 +45,6 @@
       if (plan !== null) { planTotal += plan; planHasAny = true; }
       if (fact !== null) { factTotal += fact; factHasAny = true; }
 
-      // Diff cell
       if (plan === null && fact === null) {
         diffSpan.textContent = '—';
         diffSpan.className = 'diff-val';
@@ -67,7 +63,6 @@
       }
     }
 
-    // Year totals
     document.getElementById('plan-total').textContent = fmtTotal(planHasAny ? planTotal : null);
     document.getElementById('fact-total').textContent = fmtTotal(factHasAny ? factTotal : null);
 
@@ -88,10 +83,66 @@
     }
   }
 
+  // ===== localStorage =====
+
+  function saveData() {
+    var data = { plan: {}, fact: {} };
+    for (var m = 1; m <= MONTHS; m++) {
+      var planInput = document.querySelector('.plan-input[data-month="' + m + '"]');
+      var factInput = document.querySelector('.fact-input[data-month="' + m + '"]');
+      data.plan[m] = planInput ? planInput.value : '';
+      data.fact[m] = factInput ? factInput.value : '';
+    }
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+    } catch (e) {}
+  }
+
+  function loadData() {
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (!raw) return;
+      var data = JSON.parse(raw);
+      for (var m = 1; m <= MONTHS; m++) {
+        var planInput = document.querySelector('.plan-input[data-month="' + m + '"]');
+        var factInput = document.querySelector('.fact-input[data-month="' + m + '"]');
+        if (planInput && data.plan && data.plan[m] !== undefined) planInput.value = data.plan[m];
+        if (factInput && data.fact && data.fact[m] !== undefined) factInput.value = data.fact[m];
+      }
+    } catch (e) {}
+  }
+
+  var statusTimer = null;
+  function showSaved() {
+    var el = document.getElementById('saveStatus');
+    if (!el) return;
+    el.textContent = 'Сохранено';
+    el.classList.add('visible');
+    clearTimeout(statusTimer);
+    statusTimer = setTimeout(function () {
+      el.classList.remove('visible');
+    }, 2000);
+  }
+
+  // ===== Init =====
+
   document.addEventListener('DOMContentLoaded', function () {
-    document.querySelectorAll('.cell-input').forEach(function (input) {
-      input.addEventListener('input', recalculate);
-    });
+    loadData();
     recalculate();
+
+    document.querySelectorAll('.cell-input').forEach(function (input) {
+      input.addEventListener('input', function () {
+        recalculate();
+        saveData(); // автосохранение при каждом вводе
+      });
+    });
+
+    var saveBtn = document.getElementById('saveBtn');
+    if (saveBtn) {
+      saveBtn.addEventListener('click', function () {
+        saveData();
+        showSaved();
+      });
+    }
   });
 })();
