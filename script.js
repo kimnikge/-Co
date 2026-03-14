@@ -5,7 +5,7 @@
   const STORAGE_KEY = 'partners-budget';
 
   // ← Вставь сюда URL из Google Apps Script после деплоя
-  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbxcBpPFa1xlhhUTnu-1R_fTAM1s_h0b7J9tZFNhbmy32L84tXkIjc7MuKN6LCRHlMMI/exec';
+  const SHEETS_URL = 'https://script.google.com/macros/s/AKfycbzdkoitgP52X8JAJGtkhFC1I55qj8ia1yVNMDHsXEuvbwtVXDg7C5FHdyaXbusU9Rg/exec';
 
   // ===== Helpers =====
 
