@@ -4,6 +4,11 @@
   const MONTHS = 12;
   const STORAGE_KEY = 'partners-budget';
 
+  // ← Вставь сюда URL из Google Apps Script после деплоя
+  const SHEETS_URL = '';
+
+  // ===== Helpers =====
+
   function parseVal(input) {
     if (!input || input.value.trim() === '') return null;
     return parseFloat(input.value.replace(',', '.')) || 0;
@@ -28,11 +33,11 @@
     }) + '\u202fмлн';
   }
 
+  // ===== Recalculate =====
+
   function recalculate() {
-    let planTotal = 0;
-    let factTotal = 0;
-    let planHasAny = false;
-    let factHasAny = false;
+    let planTotal = 0, factTotal = 0;
+    let planHasAny = false, factHasAny = false;
 
     for (let m = 1; m <= MONTHS; m++) {
       const planInput = document.querySelector(`.plan-input[data-month="${m}"]`);
@@ -49,17 +54,9 @@
         diffSpan.textContent = '—';
         diffSpan.className = 'diff-val';
       } else {
-        const p = plan ?? 0;
-        const f = fact ?? 0;
-        const diff = f - p;
+        const diff = (fact ?? 0) - (plan ?? 0);
         diffSpan.textContent = fmt(diff);
-        if (diff > 0) {
-          diffSpan.className = 'diff-val positive';
-        } else if (diff < 0) {
-          diffSpan.className = 'diff-val negative';
-        } else {
-          diffSpan.className = 'diff-val';
-        }
+        diffSpan.className = 'diff-val' + (diff > 0 ? ' positive' : diff < 0 ? ' negative' : '');
       }
     }
 
@@ -73,75 +70,123 @@
     } else {
       const totalDiff = factTotal - planTotal;
       diffTotalEl.textContent = fmt(totalDiff);
-      if (totalDiff > 0) {
-        diffTotalEl.className = 'diff-val total-val positive';
-      } else if (totalDiff < 0) {
-        diffTotalEl.className = 'diff-val total-val negative';
-      } else {
-        diffTotalEl.className = 'diff-val total-val';
-      }
+      diffTotalEl.className = 'diff-val total-val' + (totalDiff > 0 ? ' positive' : totalDiff < 0 ? ' negative' : '');
     }
   }
 
-  // ===== localStorage =====
+  // ===== Collect data from inputs =====
 
-  function saveData() {
+  function collectData() {
     var data = { plan: {}, fact: {} };
     for (var m = 1; m <= MONTHS; m++) {
-      var planInput = document.querySelector('.plan-input[data-month="' + m + '"]');
-      var factInput = document.querySelector('.fact-input[data-month="' + m + '"]');
-      data.plan[m] = planInput ? planInput.value : '';
-      data.fact[m] = factInput ? factInput.value : '';
+      var pi = document.querySelector('.plan-input[data-month="' + m + '"]');
+      var fi = document.querySelector('.fact-input[data-month="' + m + '"]');
+      data.plan[m] = pi ? pi.value : '';
+      data.fact[m] = fi ? fi.value : '';
     }
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    } catch (e) {}
+    return data;
   }
 
-  function loadData() {
+  // ===== Populate inputs from data =====
+
+  function populateData(data) {
+    for (var m = 1; m <= MONTHS; m++) {
+      var pi = document.querySelector('.plan-input[data-month="' + m + '"]');
+      var fi = document.querySelector('.fact-input[data-month="' + m + '"]');
+      if (pi && data.plan && data.plan[m] !== undefined) pi.value = data.plan[m];
+      if (fi && data.fact && data.fact[m] !== undefined) fi.value = data.fact[m];
+    }
+    recalculate();
+  }
+
+  // ===== localStorage (резервное хранилище) =====
+
+  function lsSave(data) {
+    try { localStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch (e) {}
+  }
+
+  function lsLoad() {
     try {
       var raw = localStorage.getItem(STORAGE_KEY);
-      if (!raw) return;
-      var data = JSON.parse(raw);
-      for (var m = 1; m <= MONTHS; m++) {
-        var planInput = document.querySelector('.plan-input[data-month="' + m + '"]');
-        var factInput = document.querySelector('.fact-input[data-month="' + m + '"]');
-        if (planInput && data.plan && data.plan[m] !== undefined) planInput.value = data.plan[m];
-        if (factInput && data.fact && data.fact[m] !== undefined) factInput.value = data.fact[m];
-      }
-    } catch (e) {}
+      return raw ? JSON.parse(raw) : null;
+    } catch (e) { return null; }
   }
 
+  // ===== Google Sheets =====
+
+  function sheetsSave(data) {
+    if (!SHEETS_URL) return Promise.resolve();
+    var encoded = encodeURIComponent(JSON.stringify(data));
+    return fetch(SHEETS_URL + '?action=save&data=' + encoded)
+      .catch(function () {});
+  }
+
+  function sheetsLoad() {
+    if (!SHEETS_URL) return Promise.resolve(null);
+    return fetch(SHEETS_URL + '?action=load')
+      .then(function (r) { return r.json(); })
+      .catch(function () { return null; });
+  }
+
+  // ===== Status =====
+
   var statusTimer = null;
-  function showSaved() {
+  function showStatus(msg, isError) {
     var el = document.getElementById('saveStatus');
     if (!el) return;
-    el.textContent = 'Сохранено';
+    el.textContent = msg;
+    el.style.color = isError ? 'var(--color-negative)' : 'var(--color-positive)';
     el.classList.add('visible');
     clearTimeout(statusTimer);
-    statusTimer = setTimeout(function () {
-      el.classList.remove('visible');
-    }, 2000);
+    statusTimer = setTimeout(function () { el.classList.remove('visible'); }, 2500);
+  }
+
+  // ===== Save =====
+
+  function saveAll() {
+    var data = collectData();
+    lsSave(data);
+    setBtnState(true);
+    sheetsSave(data).then(function () {
+      setBtnState(false);
+      showStatus('Сохранено');
+    });
+  }
+
+  function setBtnState(loading) {
+    var btn = document.getElementById('saveBtn');
+    if (!btn) return;
+    btn.disabled = loading;
+    btn.textContent = loading ? 'Сохраняю...' : 'Сохранить';
   }
 
   // ===== Init =====
 
   document.addEventListener('DOMContentLoaded', function () {
-    loadData();
-    recalculate();
-
     document.querySelectorAll('.cell-input').forEach(function (input) {
       input.addEventListener('input', function () {
         recalculate();
-        saveData(); // автосохранение при каждом вводе
+        lsSave(collectData()); // автосохранение в localStorage
       });
     });
 
     var saveBtn = document.getElementById('saveBtn');
-    if (saveBtn) {
-      saveBtn.addEventListener('click', function () {
-        saveData();
-        showSaved();
+    if (saveBtn) saveBtn.addEventListener('click', saveAll);
+
+    // Загружаем: сначала localStorage (мгновенно), потом Google Sheets (перезаписывает)
+    var local = lsLoad();
+    if (local) populateData(local);
+
+    if (SHEETS_URL) {
+      showStatus('Загрузка...');
+      sheetsLoad().then(function (data) {
+        if (data && (Object.keys(data.plan || {}).length || Object.keys(data.fact || {}).length)) {
+          populateData(data);
+          lsSave(data);
+          showStatus('Данные загружены');
+        } else {
+          document.getElementById('saveStatus').classList.remove('visible');
+        }
       });
     }
   });
