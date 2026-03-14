@@ -1,3 +1,92 @@
+/* ===== Category Tables ===== */
+.cat-table {
+  border-collapse: collapse;
+  width: 100%;
+  table-layout: fixed;
+}
+
+.cat-table .cat-col-num {
+  width: 40px;
+  min-width: 40px;
+  text-align: center;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.cat-table .cat-col-name {
+  /* wide — takes remaining space */
+}
+
+.cat-table .cat-col-val {
+  width: 140px;
+  min-width: 100px;
+}
+
+.cat-table th,
+.cat-table td {
+  padding: 0;
+  border: 1px solid var(--color-border);
+  text-align: center;
+  vertical-align: middle;
+}
+
+.cat-table thead tr {
+  background: #f0f2f7;
+}
+
+.cat-table thead th {
+  padding: 8px 10px;
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--color-text-muted);
+  letter-spacing: 0.04em;
+}
+
+.cat-table thead th.cat-col-name {
+  text-align: left;
+}
+
+.cat-table tbody tr:nth-child(odd) {
+  background: #fafbfc;
+}
+
+.cat-table tbody tr:hover {
+  background: #f0f4ff;
+}
+
+.cat-input-name {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 9px 12px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--color-text);
+  text-align: left;
+}
+
+.cat-input-name:focus {
+  background: #f0f4ff;
+}
+
+.cat-input-val {
+  width: 100%;
+  border: none;
+  outline: none;
+  background: transparent;
+  padding: 9px 8px;
+  font-size: 13px;
+  font-family: inherit;
+  color: var(--color-text);
+  text-align: right;
+}
+
+.cat-input-val:focus {
+  background: #f0f4ff;
+}
+
 /* ===== Reset ===== */
 *, *::before, *::after {
   box-sizing: border-box;
