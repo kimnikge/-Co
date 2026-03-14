@@ -1,7 +1,7 @@
 /* ===== Category Tables ===== */
 .cat-table {
   border-collapse: collapse;
-  width: 100%;
+  width: 80%;
   table-layout: fixed;
 }
 
@@ -85,6 +85,24 @@
 
 .cat-input-val:focus {
   background: #f0f4ff;
+}
+
+.cat-row-total td {
+  background: #f0f2f7;
+  font-weight: 600;
+  font-size: 13px;
+}
+
+.cat-total-label {
+  text-align: right;
+  padding: 8px 12px;
+  color: var(--color-text-muted);
+}
+
+.cat-total-val {
+  text-align: right;
+  padding: 8px 12px;
+  color: var(--color-text);
 }
 
 /* ===== Reset ===== */

@@ -2,15 +2,16 @@
 // Задеплой как Web App: "Все" могут обращаться
 
 var SHEET_NAME = 'Budget';
+var CAT_SHEETS = ['Cat1', 'Cat2', 'Cat3'];
 
 function doGet(e) {
   var action = e && e.parameter && e.parameter.action;
 
   // --- Загрузка данных ---
   if (action === 'load') {
-    var ss   = SpreadsheetApp.getActiveSpreadsheet();
+    var ss    = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(SHEET_NAME);
-    var data  = { plan: {}, fact: {} };
+    var data  = { plan: {}, fact: {}, cat1: [], cat2: [], cat3: [] };
 
     if (sheet && sheet.getLastRow() >= 3) {
       var rows = sheet.getRange(2, 1, 2, 13).getValues();
@@ -18,6 +19,20 @@ function doGet(e) {
         data.plan[col] = rows[0][col] === '' ? '' : String(rows[0][col]);
         data.fact[col] = rows[1][col] === '' ? '' : String(rows[1][col]);
       }
+    }
+
+    for (var c = 0; c < CAT_SHEETS.length; c++) {
+      var catSheet = ss.getSheetByName(CAT_SHEETS[c]);
+      var catData  = [];
+      if (catSheet && catSheet.getLastRow() >= 1) {
+        var lastRow = Math.min(catSheet.getLastRow(), 6);
+        var catRows = catSheet.getRange(1, 1, lastRow, 3).getValues();
+        for (var r = 0; r < lastRow; r++) {
+          catData.push({ name: String(catRows[r][0] || ''), a: String(catRows[r][1] || ''), b: String(catRows[r][2] || '') });
+        }
+      }
+      while (catData.length < 6) catData.push({ name: '', a: '', b: '' });
+      data['cat' + (c + 1)] = catData;
     }
 
     return ContentService
@@ -55,4 +70,15 @@ function _writeData(data) {
   }
   sheet.getRange(2, 1, 1, 13).setValues([planRow]);
   sheet.getRange(3, 1, 1, 13).setValues([factRow]);
+
+  for (var c = 0; c < CAT_SHEETS.length; c++) {
+    var catSheet = ss.getSheetByName(CAT_SHEETS[c]) || ss.insertSheet(CAT_SHEETS[c]);
+    var catData  = data['cat' + (c + 1)] || [];
+    var catRows  = [];
+    for (var r = 0; r < 6; r++) {
+      var row = catData[r] || {};
+      catRows.push([row.name || '', row.a !== undefined ? row.a : '', row.b !== undefined ? row.b : '']);
+    }
+    catSheet.getRange(1, 1, 6, 3).setValues(catRows);
+  }
 }

@@ -77,13 +77,26 @@
   // ===== Collect data from inputs =====
 
   function collectData() {
-    var data = { plan: {}, fact: {} };
+    var data = { plan: {}, fact: {}, cat1: [], cat2: [], cat3: [] };
     for (var m = 1; m <= MONTHS; m++) {
       var pi = document.querySelector('.plan-input[data-month="' + m + '"]');
       var fi = document.querySelector('.fact-input[data-month="' + m + '"]');
       data.plan[m] = pi ? pi.value : '';
       data.fact[m] = fi ? fi.value : '';
     }
+    [1, 2, 3].forEach(function (n) {
+      var names = document.querySelectorAll('.cat' + n + '-name');
+      var vals  = document.querySelectorAll('.cat' + n + '-val');
+      var rows  = [];
+      for (var r = 0; r < 6; r++) {
+        rows.push({
+          name: names[r] ? names[r].value : '',
+          a:    vals[r * 2]     ? vals[r * 2].value     : '',
+          b:    vals[r * 2 + 1] ? vals[r * 2 + 1].value : ''
+        });
+      }
+      data['cat' + n] = rows;
+    });
     return data;
   }
 
@@ -96,7 +109,19 @@
       if (pi && data.plan && data.plan[m] !== undefined) pi.value = data.plan[m];
       if (fi && data.fact && data.fact[m] !== undefined) fi.value = data.fact[m];
     }
+    [1, 2, 3].forEach(function (n) {
+      var rows = data['cat' + n];
+      if (!rows) return;
+      var names = document.querySelectorAll('.cat' + n + '-name');
+      var vals  = document.querySelectorAll('.cat' + n + '-val');
+      for (var r = 0; r < rows.length; r++) {
+        if (names[r]) names[r].value = rows[r].name || '';
+        if (vals[r * 2])     vals[r * 2].value     = rows[r].a || '';
+        if (vals[r * 2 + 1]) vals[r * 2 + 1].value = rows[r].b || '';
+      }
+    });
     recalculate();
+    recalcAllCatTotals();
   }
 
   // ===== localStorage (резервное хранилище) =====
@@ -160,6 +185,27 @@
     btn.textContent = loading ? 'Сохраняю...' : 'Сохранить';
   }
 
+  // ===== Category Totals =====
+
+  function recalcatTotals(cls, idA, idB) {
+    var inputs = document.querySelectorAll('.' + cls);
+    var sumA = 0, sumB = 0;
+    for (var i = 0; i < inputs.length; i += 2) {
+      sumA += parseFloat(inputs[i].value) || 0;
+      sumB += parseFloat(inputs[i + 1].value) || 0;
+    }
+    var elA = document.getElementById(idA);
+    var elB = document.getElementById(idB);
+    if (elA) elA.textContent = sumA % 1 === 0 ? sumA : sumA.toFixed(2);
+    if (elB) elB.textContent = sumB % 1 === 0 ? sumB : sumB.toFixed(2);
+  }
+
+  function recalcAllCatTotals() {
+    recalcatTotals('cat1-val', 'cat1-total-a', 'cat1-total-b');
+    recalcatTotals('cat2-val', 'cat2-total-a', 'cat2-total-b');
+    recalcatTotals('cat3-val', 'cat3-total-a', 'cat3-total-b');
+  }
+
   // ===== Init =====
 
   document.addEventListener('DOMContentLoaded', function () {
@@ -170,8 +216,16 @@
       });
     });
 
+    document.querySelectorAll('.cat-input-val').forEach(function (input) {
+      input.addEventListener('input', recalcAllCatTotals);
+    });
+    recalcAllCatTotals();
+
     var saveBtn = document.getElementById('saveBtn');
     if (saveBtn) saveBtn.addEventListener('click', saveAll);
+
+    // Автосохранение каждые 30 секунд
+    setInterval(saveAll, 30000);
 
     // Загружаем: сначала localStorage (мгновенно), потом Google Sheets (перезаписывает)
     var local = lsLoad();
